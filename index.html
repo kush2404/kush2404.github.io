@@ -79,8 +79,11 @@ th{background:#edf4f8}
 .fit-low{background:var(--red2);border-left:6px solid var(--red);padding:16px;border-radius:10px}
 .theory{cursor:pointer;border:2px solid transparent;transition:.15s}
 .theory:hover{border-color:#9bc9f3;transform:translateY(-2px)}
-.answerA{background:#eaf9f2!important;border-color:#7ad3aa!important}
-.answerB{background:#fff0f0!important;border-color:#f0a1a1!important}
+.answerA{background:#f2f7fc!important;border:2px solid #b9cfe3!important;color:var(--text)!important}
+.answerB{background:#f7f3fc!important;border:2px solid #cdbde8!important;color:var(--text)!important}
+.answerA:hover{background:#e9f3fb!important;border-color:#8fb6d7!important}
+.answerB:hover{background:#f0eafb!important;border-color:#aa91d0!important}
+.choice.selected{background:#eaf4ff!important;border:3px solid var(--blue)!important;color:var(--text)!important;box-shadow:0 0 0 2px #2276d220}
 .answerC{background:#fff8df!important;border-color:#ebcb72!important}
 .answerD{background:#f1ebff!important;border-color:#b9a1ed!important}
 .small{font-size:13px}.center{text-align:center}
@@ -102,7 +105,10 @@ th{background:#edf4f8}
 .paginationBtn{min-height:48px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 @media(max-width:600px){.row.pagination{display:flex!important;align-items:center;justify-content:center;gap:8px}.row.pagination>*{flex:0 0 auto}.row.pagination .center{min-width:145px}}
 .row button{touch-action:manipulation;min-height:48px}.row button[disabled]{opacity:.45;cursor:not-allowed;pointer-events:none}.candidate button{touch-action:manipulation}
-</style>
+
+.responseNote{background:#eef4f8;color:var(--text);border-left:5px solid #7b9bb8;padding:14px;border-radius:10px;line-height:1.55}
+.responseRecorded{background:#eef4f8!important;color:var(--text)!important;border:1px solid #d3e1ec}
+
 </head>
 <body>
 <header>
@@ -463,16 +469,16 @@ function aiCompare(){
 function hiGame(){
   go(4);
   const qs=[
-    ["AI ranks Candidate A #1, but the interview shows poor communication for a client-facing role. What should HR do?","Use the interview evidence and investigate before deciding.","AI is only one source of evidence; human interview context matters."],
-    ["AI ranks Candidate B #7, but B has highly relevant practical experience not captured by the structured fields. What should HR do?","Review the candidate manually and consider the missing context.","HI can identify evidence that a structured model did not capture."],
-    ["Two candidates have almost identical AI scores. What should HR do?","Use structured interview evidence and role-specific human judgement to differentiate them.","A tiny score difference should not replace contextual judgement."],
-    ["AI flags a candidate as lower-scoring because of a career gap. What should HR do?","Understand the reason for the gap before drawing a conclusion.","Context can explain a career gap; the number alone is not the whole story."],
-    ["AI and HR strongly agree on a candidate. Should HR hire automatically?","No. Treat the agreement as useful evidence and complete human review.","Agreement is a signal, not automatic proof of suitability."]
+    ["AI ranks Candidate A #1, but the interview shows poor communication for a client-facing role. What should HR do?","Use the interview evidence and investigate before deciding.","This keeps AI as one source of evidence while allowing HR to consider interview context."],
+    ["AI ranks Candidate B #7, but B has highly relevant practical experience not captured by the structured fields. What should HR do?","Review the candidate manually and consider the missing context.","Structured data may not capture every relevant part of a candidate's experience."],
+    ["Two candidates have almost identical AI scores. What should HR do?","Use structured interview evidence and role-specific human judgement to differentiate them.","A small score difference is not the whole recruitment story."],
+    ["AI flags a candidate as lower-scoring because of a career gap. What should HR do?","Understand the reason for the gap before drawing a conclusion.","The context behind a career gap may matter to the overall assessment."],
+    ["AI and HR strongly agree on a candidate. Should HR hire automatically?","No. Treat the agreement as useful evidence and complete human review.","Agreement can support a decision, but the final hiring decision still requires human review."]
   ];
-  let done=0,score=0;
+  let done=0;
   app(`<div class="hero"><span class="badge">🧠 Human Intelligence Game</span>
   <h2>Stage 4 — How can HR use HI with AI?</h2>
-  <p>Click one answer for each scenario. Your choice will be highlighted and explained immediately.</p></div>
+  <p>Choose the response you think an HR professional should consider in each scenario. <b>There are no right or wrong answers in this activity.</b> Your selection is used to discuss the role of human judgement.</p></div>
   <div class="info"><b>Game rule:</b> Use Human Intelligence when AI needs context, exceptions, interview evidence or professional judgement.</div>
   <div id="higame"></div><div id="hidone"></div>`);
   const root=document.getElementById("higame");
@@ -481,21 +487,21 @@ function hiGame(){
     d.innerHTML=`<h3>Scenario ${i+1}</h3><p><b>${q[0]}</b></p>
       <button type="button" class="choice answerA">A. ${q[1]}</button>
       <button type="button" class="choice answerB">B. Let AI decide automatically.</button>
-      <div class="status" style="display:none"></div>`;
+      <div class="responseNote" style="display:none"></div>`;
     const buttons=d.querySelectorAll("button");
-    buttons[0].addEventListener("click",()=>answer(true));
-    buttons[1].addEventListener("click",()=>answer(false));
-    function answer(ok){
+    buttons[0].addEventListener("click",()=>answer(0));
+    buttons[1].addEventListener("click",()=>answer(1));
+    function answer(choice){
       if(d.dataset.done==="1") return;
-      d.dataset.done="1"; done++; if(ok)score++;
+      d.dataset.done="1"; done++;
       buttons.forEach(b=>{b.disabled=true;b.style.cursor="default";});
-      buttons[ok?0:1].classList.add("selected");
-      const s=d.querySelector(".status");
-      s.style.display="block"; s.className="status "+(ok?"ok":"warn");
-      s.innerHTML=ok?`<b>✓ Good HR judgement.</b><br>${q[2]}`:`<b>⚠ Human review is still needed.</b><br>${q[2]}`;
+      buttons[choice].classList.add("selected");
+      const s=d.querySelector(".responseNote");
+      s.style.display="block";
+      s.innerHTML=`<b>Response recorded.</b><br>${q[2]}`;
       if(done===qs.length){
-        document.getElementById("hidone").innerHTML=`<div class="hero"><h2>HI Game Complete: ${score}/${qs.length}</h2>
-        <p><b>Core lesson:</b> Human Intelligence complements AI by adding context, exceptions, interview evidence and professional judgement.</p>
+        document.getElementById("hidone").innerHTML=`<div class="hero"><h2>HI Activity Complete</h2>
+        <p><b>5 of 5 responses recorded.</b> The purpose is to explore how HR can combine structured AI evidence with context, exceptions, interview evidence and professional judgement.</p>
         <button type="button" class="green" onclick="mbtiStage()">Continue to MBTI Questions →</button></div>`;
         document.getElementById("hidone").scrollIntoView({behavior:"smooth",block:"center"});
       }
@@ -553,7 +559,7 @@ function showMBTIResult(){
     if(t==="J/P"){v==="A"?J++:P++}
   });
   const profile=`${E>=I?"E":"I"}${S>=N?"S":"N"}${T>=F?"T":"F"}${J>=P?"J":"P"}`;
-  document.getElementById("mbtiBox").innerHTML=`<div class="card"><h3>✅ All 5 questions answered</h3>
+  document.getElementById("mbtiBox").innerHTML=`<div class="card"><h3>✓ All 5 questions answered</h3>
     <p>Your responses have been recorded as a <b>work-preference snapshot</b>.</p></div>`;
   document.getElementById("mbtiResult").innerHTML=`<div class="hero">
     <h2>Work-Preference Snapshot: ${profile}</h2>
@@ -666,16 +672,34 @@ function fairness(){
  go(9);
  const qs=[
  ["The model does not use gender directly. Could another feature still act as a proxy?","Yes — another variable may indirectly carry similar information.","A proxy is a feature that can reproduce a group-related pattern even when the sensitive characteristic is not explicitly included."],
- ["The model gives similar average scores to three groups. Does that alone prove fairness?","No.","Averages alone do not prove that the full process is fair. HR should examine outcomes, context and process."],
+ ["The model gives similar average scores to three groups. Does that alone prove fairness?","No.","Averages alone do not prove that the full process is fair. HR can examine outcomes, context and process."],
  ["A candidate has a career gap and a lower model score. What should HR do?","Review the context with a human.","A career gap can have many explanations and should not automatically be treated as a lack of ability."],
- ["AI identifies a pattern that may disadvantage a group. What should happen?","Human fairness/compliance review.","AI can flag a pattern; humans must investigate its cause, impact and appropriate response."]
+ ["AI identifies a pattern that may disadvantage a group. What should happen?","Human fairness/compliance review.","AI can flag a pattern; humans can investigate its cause, impact and appropriate response."]
  ];
- let done=0,score=0;
- app(`<div class="hero"><span class="badge">⚖️ Fairness</span><h2>Stage 10 — Fairness Challenge</h2><p>Choose the action an HR reviewer should take. The goal is to understand when AI needs human investigation.</p></div>
- <div class="grid"><div class="tile"><b>Useful pattern</b><p>A relationship such as stronger relevant skills being associated with better hiring outcomes.</p></div><div class="tile"><b>Potentially unfair pattern</b><p>A feature may indirectly reproduce group differences. HR must investigate before relying on it.</p></div></div>
+ let done=0;
+ app(`<div class="hero"><span class="badge">⚖️ Fairness</span><h2>Stage 10 — Fairness Challenge</h2><p>Choose the action you think an HR reviewer should consider. <b>There are no right or wrong answers in this discussion activity.</b></p></div>
+ <div class="grid"><div class="tile"><b>Useful pattern</b><p>A relationship such as stronger relevant skills being associated with better hiring outcomes.</p></div><div class="tile"><b>Potentially unfair pattern</b><p>A feature may indirectly reproduce group differences. HR can investigate before relying on it.</p></div></div>
  <div id="fairbox"></div><div id="fairdone"></div>`);
  const root=document.getElementById("fairbox");
- qs.forEach((q,i)=>{const d=document.createElement("div");d.className="card";d.innerHTML=`<h3>Question ${i+1}</h3><p><b>${q[0]}</b></p><button class="choice answerA">${q[1]}</button><button class="choice answerB">Let AI decide automatically.</button><div class="status" style="display:none"></div>`;const bs=d.querySelectorAll("button");bs[0].onclick=()=>ans(true);bs[1].onclick=()=>ans(false);function ans(ok){if(d.dataset.done)return;d.dataset.done=1;done++;if(ok)score++;bs.forEach(b=>b.disabled=true);const s=d.querySelector(".status");s.style.display="block";s.className="status "+(ok?"ok":"warn");s.innerHTML=ok?`<b>✓ Good judgement.</b> ${q[2]}`:`<b>Human review is needed.</b> ${q[2]}`;if(done===qs.length)document.getElementById("fairdone").innerHTML=`<div class="hero"><h2>Fairness Challenge: ${score}/${qs.length}</h2><p>Fairness is not decided by a single model score. HR must investigate patterns, proxies, exceptions and context.</p><button class="green" onclick="finalDecision()">Continue to Final Decision →</button></div>`}root.appendChild(d)});
+ qs.forEach((q,i)=>{
+   const d=document.createElement("div");d.className="card";
+   d.innerHTML=`<h3>Question ${i+1}</h3><p><b>${q[0]}</b></p>
+   <button type="button" class="choice answerA">${q[1]}</button>
+   <button type="button" class="choice answerB">Let AI decide automatically.</button>
+   <div class="responseNote" style="display:none"></div>`;
+   const bs=d.querySelectorAll("button");
+   bs[0].onclick=()=>ans(0); bs[1].onclick=()=>ans(1);
+   function ans(choice){
+     if(d.dataset.done==="1")return;
+     d.dataset.done="1";done++;
+     bs.forEach(b=>{b.disabled=true;b.style.cursor="default"});
+     bs[choice].classList.add("selected");
+     const s=d.querySelector(".responseNote");s.style.display="block";
+     s.innerHTML=`<b>Response recorded.</b><br>${q[2]}`;
+     if(done===qs.length)document.getElementById("fairdone").innerHTML=`<div class="hero"><h2>Fairness Discussion Complete</h2><p><b>4 of 4 responses recorded.</b> Fairness should be explored through patterns, proxies, exceptions, context and human review rather than treated as a simple right/wrong quiz.</p><button class="green" onclick="finalDecision()">Continue to Final Decision →</button>`;
+   }
+   root.appendChild(d)
+ });
 }
 
 /* ---------- Final ---------- */
